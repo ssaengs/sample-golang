@@ -126,7 +126,8 @@ func main() {
 		fmt.Println(line)
 	}
 	fmt.Println()
-	time.Sleep(time.Minute * 3)
+	fmt.Printf("==> Sleeping for 5 minutes to fail healthcheck %s \n", bindAddr)
+	time.Sleep(time.Minute * 5)
 	fmt.Printf("==> Server listening at %s 🚀\n", bindAddr)
 
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
