@@ -34,6 +34,7 @@ func logRequest(r *http.Request) {
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("processing request....")
 		logRequest(r)
 		fmt.Fprintf(w, "Hello! you've requested %s\n", r.URL.Path)
 	})
