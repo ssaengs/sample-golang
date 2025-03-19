@@ -14,13 +14,14 @@ import (
 func logRequest(r *http.Request, log *slog.Logger) {
 	uri := r.RequestURI
 	method := r.Method
-	log.Info("Got request!", "method", method, "uri", uri)
+	log.Info("Received Request!", "method", method, "uri", uri)
 }
 
 func main() {
 
 	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "received request at path %s with method %s", r.URL.Path, r.Method)
 		logRequest(r, log)
 	})
 
@@ -105,6 +106,13 @@ func main() {
 
 	bindAddr := fmt.Sprintf(":%s", port)
 	log.Info("server started!! 🚀", "address", bindAddr)
+
+	var mem []byte
+	go func() {
+		for {
+			mem = append(mem, 1024*1024)
+		}
+	}()
 
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 	if err != nil {
