@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofrs/uuid"
 )
@@ -55,7 +56,7 @@ func main() {
 			fmt.Fprint(w, r.Header.Get(keys[0]))
 			return
 		}
-		headers := []string{}
+		var headers []string
 		headers = append(headers, fmt.Sprintf("host=%s", r.Host))
 		for key, values := range r.Header {
 			headers = append(headers, fmt.Sprintf("%s=%s", key, strings.Join(values, ",")))
@@ -70,7 +71,7 @@ func main() {
 			fmt.Fprint(w, os.Getenv(keys[0]))
 			return
 		}
-		envs := []string{}
+		var envs []string
 		envs = append(envs, os.Environ()...)
 		fmt.Fprint(w, strings.Join(envs, "\n"))
 	})
@@ -104,8 +105,7 @@ func main() {
 		})
 	}
 
-	bindAddr := fmt.Sprintf(":%s", port)
-	log.Info("server started!! 🚀", "address", bindAddr)
+	time.Sleep(60 * time.Second)
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 	if err != nil {
 		panic(err)
