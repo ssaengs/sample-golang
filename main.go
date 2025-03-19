@@ -11,6 +11,10 @@ import (
 	"github.com/gofrs/uuid"
 )
 
+const (
+	megabyte = 1024 * 1024
+)
+
 func logRequest(r *http.Request, log *slog.Logger) {
 	uri := r.RequestURI
 	method := r.Method
@@ -107,10 +111,12 @@ func main() {
 	bindAddr := fmt.Sprintf(":%s", port)
 	log.Info("server started!! 🚀", "address", bindAddr)
 
-	var mem []byte
 	go func() {
+		// Allocate memory until the limit is reached
+		memoryDestination := make([]byte, 0, megabyte)
 		for {
-			mem = append(mem, 1024*1024)
+			memorySrc := make([]byte, megabyte) // Allocate 1 MB
+			memoryDestination = append(memoryDestination, memorySrc...)
 		}
 	}()
 
