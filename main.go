@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gofrs/uuid"
 )
@@ -126,7 +125,6 @@ func main() {
 		fmt.Println(line)
 	}
 	fmt.Println()
-	time.Sleep(time.Minute * 3)
 	fmt.Printf("==> Server listening at %s 🚀\n", bindAddr)
 
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
