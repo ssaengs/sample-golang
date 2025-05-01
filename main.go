@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
-	"sync"
+	"syscall"
+	"time"
 
 	"github.com/gofrs/uuid"
 )
@@ -35,27 +38,6 @@ func logRequest(r *http.Request) {
 }
 
 func main() {
-
-	var counter int
-	var mutex sync.Mutex
-
-	// here we simulate a deadlock that can only be fixed by restarting the server
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		if counter < 30 {
-			fmt.Fprint(w, "OK")
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "ERROR")
-		}
-	})
-
-	http.HandleFunc("/counter", func(w http.ResponseWriter, r *http.Request) {
-		logRequest(r)
-		mutex.Lock()
-		defer mutex.Unlock()
-		counter++
-		fmt.Fprintf(w, "Counter: %d\n", counter)
-	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		logRequest(r)
@@ -141,6 +123,16 @@ func main() {
 		})
 	}
 
+	var server http.Server
+
+	http.HandleFunc("/deadlock", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "triggering deadlock")
+		go func() {
+			time.Sleep(30 * time.Second)
+			server.Close()
+		}()
+	})
+
 	bindAddr := fmt.Sprintf(":%s", port)
 	lines := strings.Split(startupMessage, "\n")
 	fmt.Println()
@@ -150,7 +142,17 @@ func main() {
 	fmt.Println()
 	fmt.Printf("==> Server listening at %s 🚀\n", bindAddr)
 
-	if err := http.ListenAndServe(bindAddr, nil); err != nil {
-		panic(err)
+	server = http.Server{
+		Addr: fmt.Sprintf(":%s", port),
 	}
+
+	go server.ListenAndServe()
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
+	// Wait for the SIGTERM signal.
+	<-ctx.Done()
+
+	server.Shutdown(context.Background())
 }
