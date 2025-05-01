@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gofrs/uuid"
 )
@@ -34,6 +35,28 @@ func logRequest(r *http.Request) {
 }
 
 func main() {
+
+	var counter int
+	var mutex sync.Mutex
+
+	// here we simulate a deadlock that can only be fixed by restarting the server
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		if counter < 30 {
+			fmt.Fprint(w, "OK")
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "ERROR")
+		}
+	})
+
+	http.HandleFunc("/counter", func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r)
+		mutex.Lock()
+		defer mutex.Unlock()
+		counter++
+		fmt.Fprintf(w, "Counter: %d\n", counter)
+	})
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		logRequest(r)
 		fmt.Fprintf(w, "Hello! you've requested %s\n", r.URL.Path)
