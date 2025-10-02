@@ -134,6 +134,7 @@ func main() {
 	}
 	fmt.Println()
 	fmt.Printf("==> Server listening at %s 🚀\n", bindAddr)
+	fmt.Printf("DATABASE_URL=%s\n", os.Getenv("DATABASE_URL"))
 
 	if err := http.ListenAndServe(bindAddr, nil); err != nil {
 		panic(err)
